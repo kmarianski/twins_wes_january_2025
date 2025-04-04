@@ -1,0 +1,45 @@
+# config.yaml: Configuration for the WES pipeline
+
+# Threads for parallel processing
+threads: 8
+
+# Reference genome
+reference: "/home/kmarians/scratch/private/twins_wes_january_2025/snakemake/resources/genome/hg38.fa"
+
+# Singularity
+use-singularity: true
+singularity-args: "--bind /home/kmarians/scratch/private/twins_wes_january_2025/snakemake:/mnt"
+
+# Adapter file for Trimmomatic
+adapter: "/home/kmarians/projects/uosa/Silvia_Paracchini/WES/resources/trimmomatic/TruSeq3-PE-2.fa"
+
+# Annovar database
+annovar: "/home/kmarians/projects/uosa/Silvia_Paracchini/WES/resources/annovar"
+
+# Directories for results and logs
+directories:
+  - fastqc
+  - fastqc/raw
+  - fastqc/trimmed
+  - trimmomatic
+  - bwa
+  - merged_bams
+  - replace_rg
+  - dedup
+  - recal
+  - deepvariant
+  - annovar
+  - annovar/multianno_csv
+
+log_dirs:
+  - trimmomatic
+  - bwa
+  - merged_bams
+  - picard/replace_rg
+  - picard/dedup
+  - picard/recal_table
+  - picard/recal_apply
+  - samtools/index
+  - deepvariant
+  - vcftools/concat
+  - slurm

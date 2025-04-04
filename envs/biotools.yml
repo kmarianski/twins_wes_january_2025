@@ -1,0 +1,19 @@
+name: biotools
+channels:
+  - bioconda
+dependencies:
+  - bwa
+  - bwa-mem2
+  - fastqc
+  - gatk
+  - multiqc
+  - picard
+  - samtools
+  - snakemake-wrapper-utils
+  - bcftools
+  - vcftools
+  - pandas
+  - numpy
+  - matplotlib
+  - seaborn
+  - trimmomatic

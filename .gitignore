@@ -1,0 +1,10 @@
+/.keras/
+/.parallel/
+/.snakemake/
+/logs/
+/raw/
+/resources/
+/results/
+/shared/
+/singularity
+/snakemake/

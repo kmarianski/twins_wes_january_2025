@@ -1,0 +1,6 @@
+use-singularity: true
+singularity-args: "--bind /home/kmarians/scratch/private/twins_wes_january_2025/snakemake/,/mnt/shared/:/mnt/shared/ --nv"
+jobs: 2
+keep-going: false
+rerun-incomplete: true
+printshellcmds: true
