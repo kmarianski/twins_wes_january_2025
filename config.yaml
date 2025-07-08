@@ -9,12 +9,15 @@ reference: "/home/kmarians/scratch/private/twins_wes_january_2025/snakemake/reso
 # Singularity
 use-singularity: true
 singularity-args: "--bind /home/kmarians/scratch/private/twins_wes_january_2025/snakemake:/mnt"
-
+re
 # Adapter file for Trimmomatic
 adapter: "/home/kmarians/projects/uosa/Silvia_Paracchini/WES/resources/trimmomatic/TruSeq3-PE-2.fa"
 
 # Annovar database
 annovar: "/home/kmarians/projects/uosa/Silvia_Paracchini/WES/resources/annovar"
+
+# Know indels for BaseRecalibrator
+known_sites: "/home/kmarians/scratch/private/twins_wes_january_2025/snakemake/resources/genome/known_indels/Homo_sapiens_assembly38.known_indels.vcf.gz"
 
 # Directories for results and logs
 directories:

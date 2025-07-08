@@ -37,250 +37,310 @@ def get_sample_lanes():
 # Rule all specifies the final targets of the pipeline
 rule all:
     input:
-        # # FastQC outputs for raw reads
-        # expand("results/fastqc/raw/{stem}_{read}_fastqc.html", 
-        #        stem=get_fastq_stems(),
-        #        read=["1", "2"]),
-        # # MultiQC reports for raw reads
-        # "results/multiqc/multiqc_raw_report.html",
-        # # Trimmomatic outputs
-        # expand("results/trimmomatic/{stem}_{read}P.fq.gz", 
-        #        stem=get_fastq_stems(),
-        #        read=["1", "2"]),
-        # # FastQC outputs for trimmed reads
-        # expand("results/fastqc/trimmed/{stem}_{read}P_fastqc.html",
-        #        stem=get_fastq_stems(),
-        #        read=["1", "2"]),
-        # # MultiQC reports for trimmed reads
-        # "results/multiqc/multiqc_trimmed_report.html",
-        # # BWA mapping outputs
-        # expand("results/bwa/{stem}.bam", stem=get_fastq_stems()),
-        # # Final merged BAMs
-        # expand("results/merged_bams/{sample}.bam", 
-        #        sample=get_sample_lanes().keys())
+        # FastQC outputs for raw reads
+        expand("results/fastqc/raw/{stem}_{read}_fastqc.html", 
+               stem=get_fastq_stems(),
+               read=["1", "2"]),
+        # MultiQC reports for raw reads
+        "results/multiqc/multiqc_raw_report.html",
+        # Trimmomatic outputs
+        expand("results/trimmomatic/{stem}_{read}P.fq.gz", 
+               stem=get_fastq_stems(),
+               read=["1", "2"]),
+        # FastQC outputs for trimmed reads
+        expand("results/fastqc/trimmed/{stem}_{read}P_fastqc.html",
+               stem=get_fastq_stems(),
+               read=["1", "2"]),
+        # MultiQC reports for trimmed reads
+        "results/multiqc/multiqc_trimmed_report.html",
+        # BWA mapping outputs
+        expand("results/bwa/{stem}.bam", stem=get_fastq_stems()),
+        # Final merged BAMs
+        expand("results/merged_bams/{sample}.bam", 
+               sample=get_sample_lanes().keys())
+        #samtools_index
+        expand("results/recal/{s}.bam.bai", sample=get_sample_lanes().keys()), 
         # Deepvariant
-        # expand("results/deepvariant/{sample}.vcf.gz", sample=get_sample_lanes().keys()),
+        expand("results/deepvariant/{sample}.vcf.gz", sample=get_sample_lanes().keys()),
+        # ANNOVAR outputs
         expand('results/annovar/{sample}.Info.recode.vcf', sample=get_sample_lanes().keys()), #annovar_recode
         expand('results/annovar/{sample}.avinput', sample=get_sample_lanes().keys()), #convert2annovar
         expand('results/annovar/multianno_csv/{sample}.hg38_multianno.csv', sample=get_sample_lanes().keys()), #annotate_variation
 
 # Directory creation rule
-# rule setup_directories:
-#     output:
-#         touch("logs/setup_directories.done")
-#     run:
-#         for subdir in config["directories"]:
-#             Path("results/" + subdir).mkdir(parents=True, exist_ok=True)
-#         for subdir in config["log_dirs"]:
-#             Path("logs/" + subdir).mkdir(parents=True, exist_ok=True)
-#         shell("touch {output}")
+rule setup_directories:
+    output:
+        touch("logs/setup_directories.done")
+    run:
+        for subdir in config["directories"]:
+            Path("results/" + subdir).mkdir(parents=True, exist_ok=True)
+        for subdir in config["log_dirs"]:
+            Path("logs/" + subdir).mkdir(parents=True, exist_ok=True)
+        shell("touch {output}")
 
-# # FastQC for raw reads
-# rule fastqc_raw:
-#     input:
-#         "raw/{stem}_{read}.fq.gz"
-#     output:
-#         html="results/fastqc/raw/{stem}_{read}_fastqc.html",
-#         zip="results/fastqc/raw/{stem}_{read}_fastqc.zip"
-#     log:
-#         "logs/fastqc/raw/{stem}_{read}.log"
-#     threads: 1
-#     resources:
-#         mem_mb=4000,
-#         time_min=30,
-#         cpus=1,
-#         job_name="fastqc_raw",
-#         partition="short"
-#     conda:
-#         "envs/biotools.yml"
-#     shell:
-#         "fastqc --threads {threads} {input} -o results/fastqc/raw &> {log}"
+# FastQC for raw reads
+rule fastqc_raw:
+    input:
+        "raw/{stem}_{read}.fq.gz"
+    output:
+        html="results/fastqc/raw/{stem}_{read}_fastqc.html",
+        zip="results/fastqc/raw/{stem}_{read}_fastqc.zip"
+    log:
+        "logs/fastqc/raw/{stem}_{read}.log"
+    threads: 1
+    resources:
+        mem_mb=4000,
+        time_min=30,
+        cpus=1,
+        job_name="fastqc_raw",
+        partition="short"
+    conda:
+        "envs/biotools.yml"
+    shell:
+        "fastqc --threads {threads} {input} -o results/fastqc/raw &> {log}"
 
-# # MultiQC for raw reads
-# rule multiqc_raw:
-#     input:
-#         expand("results/fastqc/raw/{stem}_{read}_fastqc.html",
-#                stem=get_fastq_stems(),
-#                read=["1", "2"])
-#     output:
-#         "results/multiqc/multiqc_raw_report.html"
-#     log:
-#         "logs/multiqc/multiqc_raw.log"
-#     threads: 1
-#     resources:
-#         mem_mb=4000,
-#         time_min=30,
-#         cpus=1,
-#         job_name="multiqc_raw",
-#         partition="short"
-#     conda:
-#         "envs/biotools.yml"
-#     shell:
-#         "multiqc results/fastqc/raw -o results/multiqc --filename multiqc_raw_report.html &> {log}"
+# MultiQC for raw reads
+rule multiqc_raw:
+    input:
+        expand("results/fastqc/raw/{stem}_{read}_fastqc.html",
+               stem=get_fastq_stems(),
+               read=["1", "2"])
+    output:
+        "results/multiqc/multiqc_raw_report.html"
+    log:
+        "logs/multiqc/multiqc_raw.log"
+    threads: 1
+    resources:
+        mem_mb=4000,
+        time_min=30,
+        cpus=1,
+        job_name="multiqc_raw",
+        partition="short"
+    conda:
+        "envs/biotools.yml"
+    shell:
+        "multiqc results/fastqc/raw -o results/multiqc --filename multiqc_raw_report.html &> {log}"
 
-# # Trimmomatic
-# rule trimmomatic:
-#     input:
-#         r1="raw/{stem}_1.fq.gz",
-#         r2="raw/{stem}_2.fq.gz"
-#     output:
-#         r1_paired="results/trimmomatic/{stem}_1P.fq.gz",
-#         r2_paired="results/trimmomatic/{stem}_2P.fq.gz",
-#         r1_unpaired="results/trimmomatic/{stem}_1U.fq.gz",
-#         r2_unpaired="results/trimmomatic/{stem}_2U.fq.gz"
-#     log:
-#         "logs/trimmomatic/{stem}.log"
-#     threads: 8
-#     resources:
-#         mem_mb=16000,
-#         time_min=120,
-#         cpus=8,
-#         job_name="trimmomatic",
-#         partition="short"
-#     params:
-#         adapter=config["adapter"]
-#     conda:
-#         "envs/biotools.yml"
-#     shell:
-#         "trimmomatic PE -threads {threads} {input.r1} {input.r2} "
-#         "{output.r1_paired} {output.r1_unpaired} {output.r2_paired} {output.r2_unpaired} "
-#         "ILLUMINACLIP:{params.adapter}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 "
-#         "&> {log}"
+# Trimmomatic
+rule trimmomatic:
+    input:
+        r1="raw/{stem}_1.fq.gz",
+        r2="raw/{stem}_2.fq.gz"
+    output:
+        r1_paired="results/trimmomatic/{stem}_1P.fq.gz",
+        r2_paired="results/trimmomatic/{stem}_2P.fq.gz",
+        r1_unpaired="results/trimmomatic/{stem}_1U.fq.gz",
+        r2_unpaired="results/trimmomatic/{stem}_2U.fq.gz"
+    log:
+        "logs/trimmomatic/{stem}.log"
+    threads: 8
+    resources:
+        mem_mb=16000,
+        time_min=120,
+        cpus=8,
+        job_name="trimmomatic",
+        partition="short"
+    params:
+        adapter=config["adapter"]
+    conda:
+        "envs/biotools.yml"
+    shell:
+        "trimmomatic PE -threads {threads} {input.r1} {input.r2} "
+        "{output.r1_paired} {output.r1_unpaired} {output.r2_paired} {output.r2_unpaired} "
+        "ILLUMINACLIP:{params.adapter}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 "
+        "&> {log}"
 
-# # FastQC for trimmed reads
-# rule fastqc_trimmed:
-#     input:
-#         "results/trimmomatic/{stem}_{read}P.fq.gz"
-#     output:
-#         html="results/fastqc/trimmed/{stem}_{read}P_fastqc.html",
-#         zip="results/fastqc/trimmed/{stem}_{read}P_fastqc.zip"
-#     log:
-#         "logs/fastqc/trimmed/{stem}_{read}P.log"
-#     threads: 1
-#     resources:
-#         mem_mb=4000,
-#         time_min=30,
-#         cpus=1,
-#         job_name="fastqc_trimmed",
-#         partition="short"
-#     conda:
-#         "envs/biotools.yml"
-#     shell:
-#         "fastqc --threads {threads} {input} -o results/fastqc/trimmed &> {log}"
+# FastQC for trimmed reads
+rule fastqc_trimmed:
+    input:
+        "results/trimmomatic/{stem}_{read}P.fq.gz"
+    output:
+        html="results/fastqc/trimmed/{stem}_{read}P_fastqc.html",
+        zip="results/fastqc/trimmed/{stem}_{read}P_fastqc.zip"
+    log:
+        "logs/fastqc/trimmed/{stem}_{read}P.log"
+    threads: 1
+    resources:
+        mem_mb=4000,
+        time_min=30,
+        cpus=1,
+        job_name="fastqc_trimmed",
+        partition="short"
+    conda:
+        "envs/biotools.yml"
+    shell:
+        "fastqc --threads {threads} {input} -o results/fastqc/trimmed &> {log}"
 
-# # MultiQC for trimmed reads
-# rule multiqc_trimmed:
-#     input:
-#         expand("results/fastqc/trimmed/{stem}_{read}P_fastqc.html",
-#                stem=get_fastq_stems(),
-#                read=["1", "2"])
-#     output:
-#         "results/multiqc/multiqc_trimmed_report.html"
-#     log:
-#         "logs/multiqc/multiqc_trimmed.log"
-#     threads: 1
-#     resources:
-#         mem_mb=4000,
-#         time_min=30,
-#         cpus=1,
-#         job_name="multiqc_trimmed",
-#         partition="short"
-#     conda:
-#         "envs/biotools.yml"
-#     shell:
-#         "multiqc results/fastqc/trimmed -o results/multiqc --filename multiqc_trimmed_report.html &> {log}"
+# MultiQC for trimmed reads
+rule multiqc_trimmed:
+    input:
+        expand("results/fastqc/trimmed/{stem}_{read}P_fastqc.html",
+               stem=get_fastq_stems(),
+               read=["1", "2"])
+    output:
+        "results/multiqc/multiqc_trimmed_report.html"
+    log:
+        "logs/multiqc/multiqc_trimmed.log"
+    threads: 1
+    resources:
+        mem_mb=4000,
+        time_min=30,
+        cpus=1,
+        job_name="multiqc_trimmed",
+        partition="short"
+    conda:
+        "envs/biotools.yml"
+    shell:
+        "multiqc results/fastqc/trimmed -o results/multiqc --filename multiqc_trimmed_report.html &> {log}"
 
-# # BWA Mapping
-# rule bwa_map:
-#     input:
-#         r1=rules.trimmomatic.output.r1_paired,
-#         r2=rules.trimmomatic.output.r2_paired
-#     output:
-#         bam="results/bwa/{stem}.bam"
-#     params:
-#         index=config["reference"]
-#     threads:
-#         config["threads"]
-#     log:
-#         "logs/bwa/{stem}.log"
-#     # conda:
-#     #     "envs/biotools.yml"
-#     resources:
-#         mem_mb=32000,
-#         time_min=240,
-#         cpus=16,
-#         job_name='bwa',
-#         partition="medium"
-#     shell:
-#         "bwa mem -t {threads} {params.index} {input.r1} {input.r2} | "
-#         "samtools sort -@{threads} -o {output.bam}"
+# BWA Mapping
+rule bwa_map:
+    input:
+        r1=rules.trimmomatic.output.r1_paired,
+        r2=rules.trimmomatic.output.r2_paired
+    output:
+        bam="results/bwa/{stem}.bam"
+    params:
+        index=config["reference"]
+    threads:
+        config["threads"]
+    log:
+        "logs/bwa/{stem}.log"
+    # conda:
+    #     "envs/biotools.yml"
+    resources:
+        mem_mb=32000,
+        time_min=240,
+        cpus=16,
+        job_name='bwa',
+        partition="medium"
+    shell:
+        "bwa mem -t {threads} {params.index} {input.r1} {input.r2} | "
+        "samtools sort -@{threads} -o {output.bam}"
 
-# # Samtools Merge
-# rule samtools_merge:
-#     input:
-#         # Get all BAM files for a given sample
-#         lambda wildcards: expand("results/bwa/{stem}.bam", 
-#                                stem=get_sample_lanes()[wildcards.sample])
-#     output:
-#         "results/merged_bams/{sample}.bam"
-#     # conda:
-#     #     "envs/biotools.yml"
-#     threads: 8
-#     resources:
-#         mem_mb=16000,
-#         time_min=120,
-#         cpus=8,
-#         job_name="samtools_merge",
-#         partition="short"
-#     log:
-#         "logs/merged_bams/{sample}.log"
-#     shell:
-#         """
-#         if [ $(echo {input} | wc -w) -gt 1 ]; then
-#             samtools merge -@ {threads} {output} {input} 2> {log}
-#         else
-#             ln -sr {input} {output} 2> {log}
-#         fi
-#         """
+# Samtools Merge
+rule samtools_merge:
+    input:
+        # Get all BAM files for a given sample
+        lambda wildcards: expand("results/bwa/{stem}.bam", 
+                               stem=get_sample_lanes()[wildcards.sample])
+    output:
+        "results/merged_bams/{sample}.bam"
+    # conda:
+    #     "envs/biotools.yml"
+    threads: 8
+    resources:
+        mem_mb=16000,
+        time_min=120,
+        cpus=8,
+        job_name="samtools_merge",
+        partition="short"
+    log:
+        "logs/merged_bams/{sample}.log"
+    shell:
+        """
+        if [ $(echo {input} | wc -w) -gt 1 ]; then
+            samtools merge -@ {threads} {output} {input} 2> {log}
+        else
+            ln -sr {input} {output} 2> {log}
+        fi
+        """
+
+# Replace Read Groups
+rule replace_rg:
+    input:
+        "results/merged_bams/{sample}.bam"
+    output:
+        "results/replace_rg/{sample}.bam"
+    params:
+        extra="--RGLB lib1 --RGPL illumina --RGPU {s} --RGSM {s}"
+    log:
+        "logs/picard/replace_rg/{s}.log"
+    wrapper:
+        "v1.14.1/bio/picard/addorreplacereadgroups"
+
+# Mark Duplicates
+rule markduplicates_bam:
+    input:
+        bams="results/replace_rg/{sample}.bam"
+    output:
+        bam="results/dedup/{sample}.bam",
+        metrics="results/dedup/{sample}.metrics.txt"
+    log:
+        "logs/picard/dedup/{sample}.log"
+    params:
+        extra="--REMOVE_DUPLICATES true"
+    wrapper:
+        "v3.3.3/bio/picard/markduplicates"
+
+# Base Recalibrator
+rule base_recalibrator:
+    input:
+        bam="results/dedup/{sample}.bam",
+        ref=config["reference"],
+        known_sites=config["known_sites"]
+    output:
+        recal_table="results/recal/{sample}.table"
+    log:
+        "logs/picard/recal_table/{sample}.log"
+    conda:
+        "envs/biotools.yml"
+    shell:
+        "gatk BaseRecalibrator -I {input.bam} -R {input.ref} --known-sites {input.known_sites} "
+        "-O {output.recal_table}"
+
+# Apply BQSR
+rule apply_bqsr:
+    input:
+        bam="results/dedup/{sample}.bam",
+        recal_table="results/recal/{sample}.table"
+    output:
+        bam="results/recal/{sample}.bam"
+    log:
+        "logs/picard/recal_apply/{sample}.log"
+    conda:
+        "envs/biotools.yml"
+    shell:
+        "gatk ApplyBQSR -I {input.bam} --bqsr-recal-file {input.recal_table} -O {output.bam}"
     
 rule samtools_index:
     input:
         bam="results/merged_bams/{sample}.bam"
     output:
         bai="results/merged_bams/{sample}.bam.bai"
-    # conda:
-    #     "envs/biotools.yml"
+    conda:
+        "envs/biotools.yml"
     log:
         "logs/samtools/index/{sample}.log"
     shell:
         "samtools index -b {input.bam} > {log} 2>&1"
 
-# rule deepvariant:
-#     input:
-#         bam="results/merged_bams/{sample}.bam",
-#         bai="results/merged_bams/{sample}.bam.bai",
-#         ref=config["reference"]
-#     output:
-#         vcf="results/deepvariant/{sample}.vcf.gz"
-#     params:
-#         model="WES"
-#     threads: 
-#         16
-#     log:
-#         log="snakemake/logs/{sample}/"
-#     singularity:
-#         "singularity/deepvariant_latest.sif"
-#     shell:
-#         """
-#         /opt/deepvariant/bin/run_deepvariant \
-#             --model_type {params.model} \
-#             --ref {input.ref} \
-#             --reads {input.bam} \
-#             --output_vcf {output.vcf} \
-#             --num_shards {threads} \
-#             --logging_dir {log.log} \
-#             --make_examples_extra_args='vsc_min_count_snps=3,vsc_min_fraction_snps=0.2,vsc_min_count_indels=3,vsc_min_fraction_indels=0.10'
-#         """
+rule deepvariant:
+    input:
+        bam="results/merged_bams/{sample}.bam",
+        bai="results/merged_bams/{sample}.bam.bai",
+        ref=config["reference"]
+    output:
+        vcf="results/deepvariant/{sample}.vcf.gz"
+    params:
+        model="WES"
+    threads: 
+        16
+    log:
+        log="snakemake/logs/{sample}/"
+    singularity:
+        "singularity/deepvariant_latest.sif"
+    shell:
+        """
+        /opt/deepvariant/bin/run_deepvariant \
+            --model_type {params.model} \
+            --ref {input.ref} \
+            --reads {input.bam} \
+            --output_vcf {output.vcf} \
+            --num_shards {threads} \
+            --logging_dir {log.log} \
+            --make_examples_extra_args='vsc_min_count_snps=3,vsc_min_fraction_snps=0.2,vsc_min_count_indels=3,vsc_min_fraction_indels=0.10'
+        """
 
 rule annovar_recode:
     input:
