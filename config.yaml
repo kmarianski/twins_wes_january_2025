@@ -42,7 +42,7 @@ log_dirs:
   - picard/dedup
   - picard/recal_table
   - picard/recal_apply
-  - samtools/index
+  - samtools/index_recal
   - deepvariant
   - vcftools/concat
   - slurm

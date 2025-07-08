@@ -57,9 +57,9 @@ rule all:
         expand("results/bwa/{stem}.bam", stem=get_fastq_stems()),
         # Final merged BAMs
         expand("results/merged_bams/{sample}.bam", 
-               sample=get_sample_lanes().keys())
-        #samtools_index
-        expand("results/recal/{s}.bam.bai", sample=get_sample_lanes().keys()), 
+               sample=get_sample_lanes().keys()),
+        # Index recalibrated BAMs
+        expand("results/recal/{sample}.bam.bai", sample=get_sample_lanes().keys()), 
         # Deepvariant
         expand("results/deepvariant/{sample}.vcf.gz", sample=get_sample_lanes().keys()),
         # ANNOVAR outputs
@@ -302,16 +302,17 @@ rule apply_bqsr:
         "envs/biotools.yml"
     shell:
         "gatk ApplyBQSR -I {input.bam} --bqsr-recal-file {input.recal_table} -O {output.bam}"
-    
-rule samtools_index:
+
+# Index recalibrated BAMs
+rule index_recal_bam:
     input:
-        bam="results/merged_bams/{sample}.bam"
+        bam="results/recal/{sample}.bam"
     output:
-        bai="results/merged_bams/{sample}.bam.bai"
+        bai="results/recal/{sample}.bam.bai"
     conda:
         "envs/biotools.yml"
     log:
-        "logs/samtools/index/{sample}.log"
+        "logs/samtools/index_recal/{sample}.log"
     shell:
         "samtools index -b {input.bam} > {log} 2>&1"
 
